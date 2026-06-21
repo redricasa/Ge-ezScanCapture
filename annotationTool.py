@@ -8,7 +8,6 @@ import zipfile
 import tempfile
 
 # --- THEME CONFIGURATION ---
-# Creating a custom "Sepia/Dark Brown" eye-strain prevention theme
 fidel_theme = gr.themes.Soft(
     primary_hue="amber",
     secondary_hue="stone",
@@ -17,14 +16,24 @@ fidel_theme = gr.themes.Soft(
     # Backgrounds
     body_background_fill="#1a120b",        # Deep dark brown
     block_background_fill="#2b1d16",       # Slightly lighter brown for cards
-    # Text colors
+    
+    # Block Labels / Titles (e.g., "Edit Single Fidel Data")
+    block_label_text_color="#d1d1d1",      # Light Grey
+    block_title_text_color="#d1d1d1",      # Light Grey
+    
+    # Table Styling
+    table_header_text_color="#a67c52",     # Warm Brown for headers
+    table_header_background_fill="#3d2b1f", # Darker brown for header background
+    table_text_color="#e3d5ca",            # Soft cream for table content
+    
+    # General Text
     body_text_color="#e3d5ca",             # Soft cream/tan text
-    block_label_text_color="#e3d5ca",
-    block_title_text_color="#f2e9e1",
+    
     # Borders and Inputs
     block_border_width="1px",
     border_color_primary="#4a3a2e",
     input_background_fill="#1a120b",
+    
     # Buttons
     button_primary_background_fill="#5c3d2e",
     button_primary_text_color="white",
@@ -67,7 +76,6 @@ def update_ui_and_filter(img, master_df, focus_id):
         x, y, w, h = int(row["-Left/+Right"]), int(row["-Up/+Down"]), int(row["Width"]), int(row["Height"])
         
         is_focused = (idx == focus_id)
-        # We use a brighter Cyan/Amber for the boxes to stand out against brown
         color = (255, 191, 0) if is_focused else (0, 165, 255) 
         curr_t = thickness + 4 if is_focused else thickness
         
@@ -157,15 +165,14 @@ def export_dataset(img, master_df):
             for f in fs: zf.write(os.path.join(r, f), arcname=f)
     return zip_path
 
-# --- UI WITH THEME ---
+# --- UI ---
 with gr.Blocks(theme=fidel_theme, title="Ge'ez Dataset Creator") as demo:
     master_state = gr.State()
-    gr.Markdown("# 🇪🇹 Ge'ez Fidel Dataset Creator")
-    gr.Markdown("*Low-strain Dark Mode*")
+    gr.Markdown("# Ge'ez Fidel Dataset Creator for Machine Learning")
     
     with gr.Row():
         with gr.Column(scale=1):
-            input_img = gr.Image(label="1. Upload Scan", type="numpy")
+            input_img = gr.Image(label="Upload Scan here", type="numpy")
             with gr.Group():
                 focus_id = gr.Number(label="Target ID", value=0, precision=0)
                 zoom_view = gr.Image(label="Zoomed View", interactive=False)
@@ -184,10 +191,9 @@ with gr.Blocks(theme=fidel_theme, title="Ge'ez Dataset Creator") as demo:
             )
             save_btn = gr.Button("💾 Save Edits & Refresh View", variant="secondary")
 
-    gr.Markdown("### 📋 Master Dataset Table (Full Progress)")
+    gr.Markdown("### 📋 Main Dataset Table (Full Progress)")
     master_table_view = gr.Dataframe(headers=COL_NAMES, interactive=False)
 
-    # Event Handlers
     input_img.upload(process_upload, inputs=input_img, outputs=[preview_img, zoom_view, current_row_table, focus_id, master_state, master_table_view])
     preview_img.select(on_image_click, [input_img, master_state], [focus_id, preview_img, zoom_view, current_row_table])
     focus_id.change(update_ui_and_filter, [input_img, master_state, focus_id], [preview_img, zoom_view, current_row_table])
